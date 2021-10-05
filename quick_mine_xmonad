@@ -1,0 +1,49 @@
+#!/bin/sh
+
+pacstrap /mnt base base-devel linux linux-firmware linux-headers
+genfstab -U /mnt >> /mnt/etc/fstab
+arch-chroot /mnt
+pacman --noconfirm -S grub nitrogen git dialog xdg-user-dirs xdg-utils mtools dosfstools picom kitty firefox neovim pulseaudio pavucontrol  networkmanager network-manager-applet openssh intel-ucode man-db man-pages texinfo nvidia nvidia-utils zsh
+
+ln -sf /usr/share/zoneinfo/Europe/Prague /etc/localtime
+hwclock --systohc
+
+echo -e "en_US.UTF-8 UTF-8\ncs_CZ.UTF-8 UTF-8" >> /etc/locale.gen
+locale-gen
+echo -e "LANG=en_US.UTF-8\nLC_ADDRESS=cs_CZ.UTF-8\nLC_IDENTIFICATION=cs_CZ.UTF-8\nLC_MEASUREMENT=cs_CZ.UTF-8\nLC_MONETARY=cs_CZ.UTF-8\nLC_NAME=cs_CZ.UTF-8\nLC_NUMERIC=cs_CZ.UTF-8\nLC_PAPER=cs_CZ.UTF-8\nLC_TELEPHONE=cs_CZ.UTF-8\nLC_TIME=cs_CZ.UTF-8" >> /etc/locale.conf
+echo "KEYMAP=cz-qwertz" >> /etc/vconsole.conf
+
+echo "archbox" >> /etc/hostname
+echo -e "127.0.0.1	localhost\n::1		localhost\n127.0.1.1	archbox.localdomain archbox" >> /etc/hosts
+
+systemctl enable NetworkManager
+#systemctl enable sshd
+mkinitcpio -P
+
+echo "root:rootpass" | chpasswd
+
+grub-install --target=i386-pc /dev/sda
+#grub-install --target=x86_64-efi --bootloader-id=GRUB --efi-directory=/boot
+grub-mkconfig -o /boot/grub/grub.cfg
+
+echo -e '%wheel ALL=(ALL) ALL\n%wheel ALL=(ALL) NOPASSWD: /usr/bin/shutdown,/usr/bin/reboot,/usr/bin/poweroff,/usr/bin/pacman -Syu\nDefaults !tty_tickets' >> /etc/sudoers
+
+#useradd -G wheel -s /bin/zsh -m fesoj
+useradd -G wheel -m fesoj
+
+echo "fesoj:maturant" >> chpasswd
+
+#pacman -S xf86-video-fbdev
+
+#pacman --noconfirm -S xorg lightdm lightdm-gtk-greeter xfce4 xfce4-goodies
+#systemctl enable lightdm
+
+pacman --noconfirm -S xorg xmobar xmonad xmonad-contrib
+
+#as a user
+#echo "exec xmonad" >> .xinitrc
+
+echo "exec xmonad" >> /home/fesoj/.xinitrc
+
+chown -R fesoj /home/fesoj/
+#chown -R fesoj:fesoj /home/fesoj/
