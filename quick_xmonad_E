@@ -92,7 +92,7 @@ base_install_imperfect() {
 	genfstab -U /mnt >> /mnt/etc/fstab
 	cp $scr_name /mnt/$scr_name
 	holdon 2
-	echo -e "Now execute:\n     arch-chroot /mnt\n     $raw_name ph2\n\n"
+	echo -e "Now execute:\n     arch-chroot /mnt\n     $raw_name ph2   OR   $raw_name ph2nge    for no desktop environment\n\n"
 }
 
 extra_software() {
