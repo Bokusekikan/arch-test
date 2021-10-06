@@ -1,0 +1,191 @@
+#!/bin/bash
+
+############
+# SOFTWARE #
+############
+base_packages="base base-devel linux-firmware"
+kernel="linux linux-headers"		# standart kernel
+#kernel="linux-lts linux-lts-headers"	# lts kernel
+#kernel="linux-zen linux-zen-headers"	# zen kernel
+
+info_pages="man-db man-pages texinfo"
+ms_utils="mtools dosfstools"
+dev_utils="git dialog"
+xdg="xdg-user-dirs xdg-utils"
+audio="pulseaudio pavucontrol"
+network="networkmanager network-manager-applet openssh"
+graphics="nvidia nvidia-utils"
+bootloader="grub"
+shell="zsh"
+compositor="picom"
+browser="firefox"
+text_editor="neovim"
+ucode="intel-ucode"
+terminal="kitty"
+wallpaper_setter="nitrogen"
+
+login_screen="lightdm lightdm-gtk-greeter"
+xmonad="xorg xmonad xmonad-contrib xmobar"
+xfce4="xorg xfce4 xfce4-goodies"
+
+
+############
+# SETTINGS #
+############
+time_region="Europe"
+time_city="Prague"
+localegen="en_US.UTF-8 UTF-8\ncs_CZ.UTF-8 UTF-8"
+localeconf="LANG=en_US.UTF-8\nLC_ADDRESS=cs_CZ.UTF-8\nLC_IDENTIFICATION=cs_CZ.UTF-8\nLC_MEASUREMENT=cs_CZ.UTF-8\nLC_MONETARY=cs_CZ.UTF-8\nLC_NAME=cs_CZ.UTF-8\nLC_NUMERIC=cs_CZ.UTF-8\nLC_PAPER=cs_CZ.UTF-8\nLC_TELEPHONE=cs_CZ.UTF-8\nLC_TIME=cs_CZ.UTF-8"
+keyboardlayout="KEYMAP=cz-qwertz"
+hostname="archbox"
+network_settings="127.0.0.1	localhost\n::1		localhost\n127.0.1.1	$hostname.localdomain $hostname"
+root_credentials="root:rootpass"
+user_credentials="fesoj:maturant"
+username="fesoj"
+sudoers_edit='%wheel ALL=(ALL) ALL\n%wheel ALL=(ALL) NOPASSWD: /usr/bin/shutdown,/usr/bin/reboot,/usr/bin/poweroff,/usr/bin/pacman -Syu\nDefaults !tty_tickets'
+xinit_entry="exec xmonad"
+
+#STAGE 0
+#loadkeys cz-qwertz
+#timedatectl set-ntp true
+#timedatectl 
+
+holdon() {
+	echo "STAGE $1 COMPLETED"
+	echo "Press Enter to continue"
+	read
+	clear
+}
+
+saraba() {
+	clear
+	echo "STAGE $1 COMPLETED"
+	echo "Instalation completed"
+	echo -e "Now execute the following commands in order:\n     rm $scr_name\n     exit\n     umount /mnt\n     reboot\n\n"
+	echo "Press Enter to end the script"
+	read
+	exit
+}
+
+disk_preparation() {
+	echo "STAGE 1: disk preparation"
+	#fdisk /dev/sda
+	#disk partitioning has to be done manually
+	mkfs.ext4 /dev/sda1
+	mount /dev/sda1 /mnt
+	#mkswap /dev/sda2
+	#swapon /dev/sda2
+	holdon 1
+}
+
+base_install() {
+	echo "STAGE 2: base install"
+	pacstrap /mnt $base_packages $kernel
+	genfstab -U /mnt >> /mnt/etc/fstab
+	arch-chroot /mnt
+	holdon 2
+}
+
+base_install_imperfect() {
+	echo "STAGE 2: base install"
+	pacstrap /mnt $base_packages $kernel
+	genfstab -U /mnt >> /mnt/etc/fstab
+	cp $scr_name /mnt/$scr_name
+	holdon 2
+	echo -e "Now execute:\n     arch-chroot /mnt\n     $raw_name ph2\n\n"
+}
+
+extra_software() {
+	echo "STAGE 3: extra software"
+	pacman --noconfirm -S $bootloader $wallpaper_setter $dev_utils $xdg $ms_utils $compositor $terminal $browser $text_editor $audio $network $ucode $graphics $shell $info_pages
+	holdon 3
+}
+
+environment() {
+	echo "STAGE 4: environment"
+	ln -sf /usr/share/zoneinfo/$time_region/$time_city /etc/localtime
+	hwclock --systohc
+	echo -e $localegen >> /etc/locale.gen
+	locale-gen
+	echo -e $localeconf >> /etc/locale.conf
+	echo $keyboardlayout >> /etc/vconsole.conf
+	echo $hostname >> /etc/hostname
+	echo -e $networksettings >> /etc/hosts
+	systemctl enable NetworkManager
+	#systemctl enable sshd
+	mkinitcpio -P
+	echo $root_credentials | chpasswd
+	holdon 4
+}
+
+bootloader_sudoers() {
+	echo "STAGE 5 Bootloader and sudoers"
+	grub-install --target=i386-pc /dev/sda
+	#grub-install --target=x86_64-efi --bootloader-id=GRUB --efi-directory=/boot
+	grub-mkconfig -o /boot/grub/grub.cfg
+	echo -e $sudoers_edit >> /etc/sudoers
+	holdon 5
+}
+
+users() {
+	echo "STAGE 6 Users"
+	#useradd -G wheel -s /bin/zsh -m $username
+	useradd -G wheel -m $username
+	echo $user_credentials | chpasswd
+	holdon 6
+}
+
+graphical_environment() {
+	echo "STAGE 7: Graphical environment"
+	#pacman -S xf86-video-fbdev
+	#pacman --noconfirm -S $xfce4 $login_screen 
+	#systemctl enable lightdm
+	pacman --noconfirm -S $xmonad 
+	#as a user
+	#echo "exec xmonad" >> .xinitrc
+	echo $xinit_entry >> /home/$username/.xinitrc
+	chown -R $username /home/$username/
+	#chown -R $username:$username /home/$username/
+	saraba 7
+}
+
+main(){
+	case $arguments in  
+		ph1)
+			disk_preparation
+			#base_install
+			base_install_imperfect
+			;;
+		ph2)
+			extra_software
+			environment
+			bootloader_sudoers
+			users
+			graphical_environment
+			;;
+		ph2nge)
+			extra_software
+			environment
+			bootloader_sudoers
+			users
+			;;
+		all) #don't use for now
+			disk_preparation
+			base_install
+			extra_software
+			environment
+			bootloader_sudoers
+			users
+			graphical_environment
+			;;
+		*)
+			echo "Unknown choice"
+			;;
+	esac
+}
+
+raw_name=$0
+scr_name=${raw_name:2}
+
+arguments=$1
+main
