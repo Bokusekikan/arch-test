@@ -123,7 +123,8 @@ install(){
 
 	packages="$packages man-db man-pages texinfo"   #info pages
 	packages="$packages mtools dosfstools"          #ms utils
-	packages="$packages git dialog whiptail"        #dev utils
+	#packages="$packages git dialog whiptail"        #dev utils
+	packages="$packages git dialog"  	        #dev utils
 	packages="$packages xdg-user-dirs xdg-utils"    #xdg
 	packages="$packages pulseaudio pavucontrol"     #audio
 	packages="$packages networkmanager network-manager-applet openssh" #network
@@ -141,7 +142,8 @@ install(){
 
 	#packages="$packages "
 
-	pacman -S --noconfirm $packages
+	#pacman -S --noconfirm $packages
+	pacman -S  $packages
 
 	ln -sf /usr/share/zoneinfo/$TIMEZONE_REGION/$TIMEZONE_CITY /etc/localtime 
 	hwclock --systohc
