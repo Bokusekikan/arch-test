@@ -14,12 +14,11 @@ SCRIPT_NAME=${RAW_SCRIPT_NAME:2}
 
 ### install options: ############################################
 
-ls /sys/firmware/efi/efivars 2> /dev/null > /dev/null
-[ $? -eq 0 ] && INSTALL_MODE=uefi || INSTALL_MODE=legacy
 
 #INSTALL_MODE="legacy" #OPTIONS: legacy uefi
 
 ROOT_DRIVE="/dev/sda"
+ROOT_PART="/dev/sda1"
 SWAP_PART="yes" #OPTIONS: yes no
 
 KERNEL_TYPE="stable" #OPTIONS:stable zen lts
@@ -66,6 +65,7 @@ prechroot(){
 
 	loadkeys $KEYMAP
 	timedatectl set-ntp true
+	mount $ROOT_PART /mnt
 	pacstrap /mnt base base-devel linux-firmware $KERNEL
 	genfstab -U /mnt >> /mnt/etc/fstab
 	echo "Initial setup complete"
@@ -73,7 +73,7 @@ prechroot(){
 
 chrting(){
 	cp $SCRIPT_NAME /mnt/$SCRIPT_NAME
-	arch-chroot /mnt/$SCRIPT_NAME -p 3
+	arch-chroot /mnt ./$SCRIPT_NAME -p 3
 	echo "arch-chroot complete installer will now close"
 	rm /mnt/$SCRIPT_NAME
 	umount /mnt
@@ -172,6 +172,9 @@ install(){
 	mkinitcpio -P
 
 	echo "$ROOT_NAME:$ROOT_PASS" | chpasswd
+
+	ls /sys/firmware/efi/efivars 2> /dev/null > /dev/null
+	[ $? -eq 0 ] && INSTALL_MODE=uefi || INSTALL_MODE=legacy
 
 	case $INSTALL_MODE in 
 		legacy) grub-install --target=i386-pc $ROOT_DRIVE ;;
