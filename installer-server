@@ -10,112 +10,134 @@ name=${raw_name:2}
 #		activate swap -> swapon
 # 		set which disk is root for grub
 
-timedatectl set-ntp true
+pre(){
+	echo "Running 'pre()'"; read
+	timedatectl set-ntp true
 
-pacstrap /mnt base base-devel linux-firmware linux linux-headers
-#pacstrap /mnt base base-devel linux-firmware linux-lts linux-lts-headers 
+	pacstrap /mnt base base-devel linux-firmware linux linux-headers
+	#pacstrap /mnt base base-devel linux-firmware linux-lts linux-lts-headers 
 
-genfstab -U /mnt >> /mnt/etc/fstab
-cp $name /mnt/$name
-echo "Part 1 finished"
+	genfstab -U /mnt >> /mnt/etc/fstab
+	echo "Part 1 finished"
+	chroot
+}
 
-packages=""
-#packages="$packages "
-packages="$packages man-db man-pages texinfo"	#info pages
-packages="$packages mtools dosfstools"		#ms utils
-packages="$packages git dialog"			#dev utils
-packages="$packages networkmanager openssh"     #network
-#packages="$packages nvidia nvidia-utils"	#gpu drivers - nvidia
-#packages="$packages xf86-video-amdgpu"		#gpu drivers - amd
-#packages="$packages xf86-video-fbdev"		#gpu drivers - vbox
-packages="$packages grub"			#bootloader
-packages="$packages neovim"			#text editor
-packages="$packages intel-ucode"		#intel cpu microcode
-#packages="$packages amd-ucode"			#amd cpu microcode
-packages="$packages nfs-utils"			#nfs
-#packages="$packages sqlite"			#database - sqlite3
-#packages="$packages mariadb"			#database - mariadb
-packages="$packages docker docker-compose"	#docker
-#packages="$packages "				#S.M.A.R.T.
+chroot(){
+	cp $name /mnt/$name
+	arch-chroot /mnt ./$name 2	
+	rm /mnt/$name
+	umount /mnt
+	exit 0
+}
+
+install(){
+	echo "Running 'install()'"; read
+	packages=""
+	#packages="$packages "
+	packages="$packages man-db man-pages texinfo"	#info pages
+	packages="$packages mtools dosfstools"		#ms utils
+	packages="$packages git dialog"			#dev utils
+	packages="$packages networkmanager openssh"     #network
+	#packages="$packages nvidia nvidia-utils"	#gpu drivers - nvidia
+	#packages="$packages xf86-video-amdgpu"		#gpu drivers - amd
+	#packages="$packages xf86-video-fbdev"		#gpu drivers - vbox
+	packages="$packages grub"			#bootloader
+	packages="$packages neovim"			#text editor
+	packages="$packages intel-ucode"		#intel cpu microcode
+	#packages="$packages amd-ucode"			#amd cpu microcode
+	packages="$packages nfs-utils"			#nfs
+	#packages="$packages sqlite"			#database - sqlite3
+	#packages="$packages mariadb"			#database - mariadb
+	packages="$packages docker docker-compose"	#docker
+	#packages="$packages "				#S.M.A.R.T.
 
 
-pacman -Sy
-pacman -S --noconfirm $packages
+	pacman -Sy
+	pacman -S --noconfirm $packages
 
-ln -sf /usr/share/zoneinfo/Europe/Prague /etc/localtime
-hwclock --systohc
-echo "en_US.UTF8 UTF-8" >> /etc/locale.gen
-echo "cs_CZ.UTF8 UTF-8" >> /etc/locale.gen
-locale-gen
+	ln -sf /usr/share/zoneinfo/Europe/Prague /etc/localtime
+	hwclock --systohc
+	echo "en_US.UTF8 UTF-8" >> /etc/locale.gen
+	echo "cs_CZ.UTF8 UTF-8" >> /etc/locale.gen
+	locale-gen
 
-echo "LANG=en_US.UTF-8" >> /etc/locale.conf
-#echo "LC_ADDRESS=cs_CZ.UTF-8" >> /etc/locale.conf
-#echo "LC_IDENTIFICATION=cs_CZ.UTF-8" >> /etc/locale.conf
-#echo "LC_MEASUREMENT=cs_CZ.UTF-8" >> /etc/locale.conf
-#echo "LC_MONETARY=cs_CZ.UTF-8" >> /etc/locale.conf
-#echo "LC_NAME=cs_CZ.UTF-8" >> /etc/locale.conf
-#echo "LC_NUMERIC=cs_CZ.UTF-8" >> /etc/locale.conf
-#echo "LC_PAPER=cs_CZ.UTF-8" >> /etc/locale.conf
-#echo "LC_TELEPHONE=cs_CZ.UTF-8" >> /etc/locale.conf
-#echo "LC_TIME=cs_CZ.UTF-8" >> /etc/locale.conf
+	echo "LANG=en_US.UTF-8" >> /etc/locale.conf
+	#echo "LC_ADDRESS=cs_CZ.UTF-8" >> /etc/locale.conf
+	#echo "LC_IDENTIFICATION=cs_CZ.UTF-8" >> /etc/locale.conf
+	#echo "LC_MEASUREMENT=cs_CZ.UTF-8" >> /etc/locale.conf
+	#echo "LC_MONETARY=cs_CZ.UTF-8" >> /etc/locale.conf
+	#echo "LC_NAME=cs_CZ.UTF-8" >> /etc/locale.conf
+	#echo "LC_NUMERIC=cs_CZ.UTF-8" >> /etc/locale.conf
+	#echo "LC_PAPER=cs_CZ.UTF-8" >> /etc/locale.conf
+	#echo "LC_TELEPHONE=cs_CZ.UTF-8" >> /etc/locale.conf
+	#echo "LC_TIME=cs_CZ.UTF-8" >> /etc/locale.conf
 
-echo "KEYMAP=cz-qwertz" >> /etc/vconsole.conf
+	echo "KEYMAP=cz-qwertz" >> /etc/vconsole.conf
 
-echo "arch-server" >> /etc/hostname
+	echo "arch-server" >> /etc/hostname
 
-echo "127.0.0.1     localhost" >> /etc/hosts
-echo "::1           localhost" >> /etc/hosts
-echo "127.0.1.1     arch-server.localdomain arch-server" >> /etc/hosts
+	echo "127.0.0.1     localhost" >> /etc/hosts
+	echo "::1           localhost" >> /etc/hosts
+	echo "127.0.1.1     arch-server.localdomain arch-server" >> /etc/hosts
 
-mkinitcpio -P
+	mkinitcpio -P
 
-#Network
-systemctl enable NetworkManager
+	#Network
+	systemctl enable NetworkManager
 
-#Static IP
+	#Static IP
 
-#Bootloader
-grub-install --target=i386-pc /dev/sda
-#grub-install --target=x86_64-efi --bootloader-id=GRUB --efi-directory=/boot
-grub-mkconfig -o /boot/grub/grub.cfg
+	#Bootloader
+	grub-install --target=i386-pc /dev/sda
+	#grub-install --target=x86_64-efi --bootloader-id=GRUB --efi-directory=/boot
+	grub-mkconfig -o /boot/grub/grub.cfg
 
-echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
-# echo "Defaults !tty_tickets" >> /etc/sudoers
+	echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+	# echo "Defaults !tty_tickets" >> /etc/sudoers
 
-#USERS
-echo "root:rootpass" | chpasswd
-useradd -m -G wheel fesoj
-echo "fesoj:maturant" | chpasswd
+	#USERS
+	echo "root:rootpass" | chpasswd
+	useradd -m -G wheel fesoj
+	echo "fesoj:maturant" | chpasswd
 
-#Drives
-# mount RAID on /srv/4TBRaid
-# edit fstab for auto-mounting
+	#Drives
+	# mount RAID on /srv/4TBRaid
+	# edit fstab for auto-mounting
 
-#Git
-# #useradd -m git
-# usermod -d /home/git -s /bin/bash git
-# chown git:git /home/git
-# #chown git:git /home/git/*
+	#Git
+	# #useradd -m git
+	# usermod -d /home/git -s /bin/bash git
+	# chown git:git /home/git
+	# #chown git:git /home/git/*
 
-#NFS
-systemctl enable nfs-server
-# edit the /etc/exports
-#	/srv/4TBRaid/pepa     *(rw,sync)
-# run "exportfs -arv" to reload nfs
-# showmount -e <IP> -> displays all mountable shares
+	#NFS
+	systemctl enable nfs-server
+	# edit the /etc/exports
+	#	/srv/4TBRaid/pepa     *(rw,sync)
+	# run "exportfs -arv" to reload nfs
+	# showmount -e <IP> -> displays all mountable shares
 
-#SSH
-systemctl enable sshd
+	#SSH
+	systemctl enable sshd
 
-#AUR
-git clone https://aur.archlinux.org/yay.git /home/fesoj/yay
-cd /home/fesoj/yay
-sudo -u fesoj "makepkg --noconfirm -si"
+	#AUR
+	git clone https://aur.archlinux.org/yay.git /home/fesoj/yay
+	cd /home/fesoj/yay
+	sudo -u fesoj "makepkg --noconfirm -si"
 
-#Timeshift
-yay -S timeshift
+	#Timeshift
+	yay -S timeshift
 
-#Jellyfin
-useradd jellyfin
-yay -S jellyfin
+	#Jellyfin
+	useradd jellyfin
+	yay -S jellyfin
+
+	echo "Part 2 finished"
+	echo "Exiting"
+}
+
+[ $1 -eq 2 ] && install || pre 
+
+
+
 
