@@ -121,16 +121,17 @@ install(){
 	systemctl enable sshd
 
 	#AUR
-	git clone https://aur.archlinux.org/yay.git /home/fesoj/yay
+	sudo -u fesoj "git clone https://aur.archlinux.org/yay.git /home/fesoj/yay"
 	cd /home/fesoj/yay
 	sudo -u fesoj "makepkg --noconfirm -si"
 
 	#Timeshift
-	yay -S timeshift
+	sudo -u fesoj "yay -S timeshift"
 
 	#Jellyfin
 	useradd jellyfin
-	yay -S jellyfin
+	sudo -u fesoj "yay -S jellyfin-bin"
+	systemctl enable jellyfin
 
 	echo "Part 2 finished"
 	echo "Exiting"
