@@ -119,24 +119,31 @@ install(){
 
 	#SSH
 	systemctl enable sshd
-
-	#AUR
-	sudo -u fesoj "git clone https://aur.archlinux.org/yay.git /home/fesoj/yay"
-	cd /home/fesoj/yay
-	sudo -u fesoj "makepkg --noconfirm -si"
-
-	#Timeshift
-	sudo -u fesoj "yay -S timeshift"
-
-	#Jellyfin
-	useradd jellyfin
-	sudo -u fesoj "yay -S jellyfin-bin"
-	systemctl enable jellyfin
-
 	echo "Part 2 finished"
 	echo "Exiting"
 }
 
+post(){
+	echo "Running 'post()'"; read
+	#AUR
+	git clone https://aur.archlinux.org/yay.git /home/fesoj/yay
+	cd /home/fesoj/yay
+	makepkg --noconfirm -si
+
+	#Timeshift
+	yay -S timeshift
+
+	#Jellyfin
+	sudo useradd jellyfin
+	yay -S jellyfin-bin
+	systemctl enable jellyfin
+	echo "Part 3 finished"
+	echo "Exiting"
+	exit 0
+
+}
+
+[ $1 -eq 3 ] && post 
 [ $1 -eq 2 ] && install || pre 
 
 
