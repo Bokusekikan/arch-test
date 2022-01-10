@@ -52,7 +52,7 @@ install(){
 	#packages="$packages "				#S.M.A.R.T.
 
 
-	pacman -Sy
+	#pacman -Sy
 	pacman -S --noconfirm $packages
 
 	ln -sf /usr/share/zoneinfo/Europe/Prague /etc/localtime
@@ -85,6 +85,9 @@ install(){
 	#Network
 	systemctl enable NetworkManager
 
+	#SSH
+	systemctl enable sshd
+
 	#Static IP
 
 	#Bootloader
@@ -105,10 +108,10 @@ install(){
 	# edit fstab for auto-mounting
 
 	#Git
-	# #useradd -m git
-	# usermod -d /home/git -s /bin/bash git
-	# chown git:git /home/git
-	# #chown git:git /home/git/*
+	#useradd -m git
+	usermod -d /home/git -s /bin/bash git
+	chown -R git:git /home/git
+	#chown git:git /home/git/*
 
 	#NFS
 	systemctl enable nfs-server
@@ -117,35 +120,45 @@ install(){
 	# run "exportfs -arv" to reload nfs
 	# showmount -e <IP> -> displays all mountable shares
 
-	#SSH
-	systemctl enable sshd
+	#AUR
+	cd /opt
+	git clone https://aur.archlinux.org/yay.git
+	chown -R fesoj:fesoj ./yay
+	cd yay
+	su - fesoj -c "makepkg -si"
+	cd
+
 	echo "Part 2 finished"
 	echo "Exiting"
 }
 
 post(){
 	echo "Running 'post()'"; read
-	#AUR
-	git clone https://aur.archlinux.org/yay.git /home/fesoj/yay
-	cd /home/fesoj/yay
-	makepkg --noconfirm -si
+	##AUR
+	#git clone https://aur.archlinux.org/yay.git /home/fesoj/yay
+	#cd /home/fesoj/yay
+	#makepkg --noconfirm -si
 
 	#Timeshift
-	yay -S timeshift
+	yay -S timeshift-bin
 
 	#Jellyfin
 	sudo useradd jellyfin
 	yay -S jellyfin-bin
-	systemctl enable jellyfin
+	sudo systemctl enable jellyfin
 	echo "Part 3 finished"
 	echo "Exiting"
 	exit 0
+
+	#Docker
+
+
+	#Booru
+
+	
+	#Nextcloud
 
 }
 
 [ $1 -eq 3 ] && post 
 [ $1 -eq 2 ] && install || pre 
-
-
-
-
