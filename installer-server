@@ -52,7 +52,7 @@ pre(){
 
 chroot(){
 	cp $name /mnt/$name
-	arch-chroot /mnt ./$name 2	
+	arch-chroot /mnt bash $name 2	
 	rm /mnt/$name
 	umount /mnt
 	exit 0
