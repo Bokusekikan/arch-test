@@ -1,7 +1,11 @@
 #!/bin/bash
 
 raw_name=$0
-name=${raw_name:2}
+if [[ $raw_name == *"./"* ]]; then
+	name=${raw_name:2}
+else
+	name=$raw_name
+fi
 #manually do:
 #		change keymap -> loadkeys cz-qwertz
 #		partition disks
