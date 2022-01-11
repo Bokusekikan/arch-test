@@ -14,6 +14,30 @@ pre(){
 	echo "Running 'pre()'"; read
 	timedatectl set-ntp true
 
+#	lsblk -l -n -o NAME,LABEL,RM,SIZE,TYPE,MOUNTPOINT > /tmp/drives
+#	drives=()
+#
+#	while read line;do
+#		drives+=("$line")
+#	done < /tmp/drives
+#
+#	drives+=("DONE")
+#
+#	echo "    NAME LABEL  RM  SIZE TYPE MOUNTPOINT"
+#	select disk in "${drives[@]}";do 
+#		cfdisk /dev/$disk
+#		case $disk in
+#			dsoihgv)
+#				;;
+#			doshdos)
+#				;;
+#			DONE) break ;;
+#		esac
+#	done
+
+	#echo "Pick system drive"
+	#echo "Pick data drive"
+
 	pacstrap /mnt base base-devel linux-firmware linux linux-headers
 	#pacstrap /mnt base base-devel linux-firmware linux-lts linux-lts-headers 
 
@@ -47,7 +71,7 @@ install(){
 	#packages="$packages amd-ucode"			#amd cpu microcode
 	packages="$packages nfs-utils"			#nfs
 	#packages="$packages sqlite"			#database - sqlite3
-	#packages="$packages mariadb"			#database - mariadb
+	#packages="$packages mariadb"			#database - mariadb(mysql)
 	packages="$packages docker docker-compose"	#docker
 	#packages="$packages "				#S.M.A.R.T.
 
@@ -101,28 +125,28 @@ install(){
 	useradd -m -G wheel fesoj
 	echo "fesoj:maturant" | chpasswd
 
-	#Drives
-	# mount RAID on /srv/4TBRaid
-	# edit fstab for auto-mounting
-
-	##AUR
-	#cd /opt
-	#git clone https://aur.archlinux.org/yay.git
-	#chown -R fesoj:fesoj ./yay
-	#cd yay
-	#su - fesoj -c "makepkg -si"
-	#cd
-
 	echo "Part 2 finished"
 	echo "Exiting"
 }
 
 post(){
 	echo "Running 'post()'"; read
+
+	#services=()
+
+	#selected_services=$(whiptail --title "Post installation: Server" --checklist "Pick" 30 50 20 ${services[@]} )
+
+	#case $selected_services in 
+	#	*) ;;
+	#esac
+
 	#AUR
 	git clone https://aur.archlinux.org/yay.git
 	cd yay
 	makepkg --noconfirm -si
+	cd
+	rm yay
+
 
 	#Timeshift
 	yay -S timeshift-bin
@@ -146,6 +170,17 @@ post(){
 	#Static IP
 
 
+	#Disable root account
+
+
+	#SSH allow only known keys
+
+
+	#Drives
+	# mount RAID on /srv/4TBRaid
+	# edit fstab for auto-mounting
+
+
 	#Git
 	#useradd -m git
 	mkdir /home/git
@@ -155,7 +190,7 @@ post(){
 
 
 	#NFS
-	systemctl enable nfs-server
+	sudo systemctl enable nfs-server
 	# edit the /etc/exports
 	#	/srv/4TBRaid/pepa     *(rw,sync)
 	# run "exportfs -arv" to reload nfs
